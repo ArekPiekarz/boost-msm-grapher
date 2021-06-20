@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
 
+use std::io::Write;
+
+
 #[test]
 fn shouldFail_whenNoFilePathIsProvided()
 {
@@ -27,4 +30,263 @@ fn shouldFail_whenFileDoesNotHaveTransitionTable()
     let file = tempfile::NamedTempFile::new().unwrap();
     assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Transition table was not found.\"\n");
+}
+
+#[test]
+fn shouldFail_whenTransitionTableHasNoRows()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<> {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Rows were not found in the transition table.\"\n");
+}
+
+#[test]
+fn shouldFail_whenFirstRowIdentifierDoesNotEndWithRow()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct not_a_row_identifier {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        not_a_row_identifier
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Rows were not found in the transition table.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowDoesNotHaveTemplateStartSymbol()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct Row {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        Row
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected row template start, got: TemplateEnd.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowIsEmpty()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        _row<>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected start state, got: TemplateEnd.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowDoesNotStartWithIdentifier()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        _row<,>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected start state, got: Comma.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowHasOnlyStartState()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        _row<start_state>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected comma after start state, got: TemplateEnd.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowDoesNotHaveEvent()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        _row<start_state,>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected event, got: TemplateEnd.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowDoesNotHaveCommaAfterEvent()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        _row<start_state, event>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected comma after event, got: TemplateEnd.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowDoesNotHaveTargetState()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        _row<start_state, event,>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected target state, got: TemplateEnd.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowDoesNotEndWithCommaOrTemplateEndSymbol()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+struct target_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        _row<start_state, event, target_state
+    {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected comma or template end symbol after target state, got: BlockStart.\"\n");
+}
+
+#[test]
+fn shouldFail_whenTransitionTableDoesNotEndWithTemplateEndSymbol()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+struct target_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        _row<start_state, event, target_state>
+    {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected comma or template end symbol after row, got: BlockStart.\"\n");
+}
+
+#[test]
+fn shouldPass_whenTransitionTableHasRowWithStartStateAndEventAndTargetState()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+struct target_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        _row<start_state, event, target_state>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    let expectedOutput =
+"@startuml
+hide empty description
+[*] --> start_state
+start_state --> target_state : on event
+@enduml
+";
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+        .stdout(expectedOutput);
 }
