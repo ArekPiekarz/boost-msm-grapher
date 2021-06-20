@@ -195,6 +195,10 @@ impl Parser
     fn parseTokenInAfterAction(&mut self, token: &Token) -> Result<Flow,String>
     {
         match token {
+            Token::Comma => {
+                self.state = State::ExpectGuard;
+                Ok(Flow::Continue)
+            },
             Token::TemplateEnd => {
                 self.state = State::AfterRowEnd;
                 Ok(Flow::Continue)
