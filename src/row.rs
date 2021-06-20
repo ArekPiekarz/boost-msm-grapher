@@ -6,13 +6,14 @@ pub(crate) struct Row
     pub(crate) event: String,
     pub(crate) target: String,
     pub(crate) action: String,
+    pub(crate) guard: String
 }
 
 impl Row
 {
     pub(crate) fn new(kind: RowKind) -> Self
     {
-        Self{kind, start: "".into(), event: "".into(), target: "".into(), action: "".into()}
+        Self{kind, start: "".into(), event: "".into(), target: "".into(), action: "".into(), guard: "".into()}
     }
 }
 

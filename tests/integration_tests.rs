@@ -326,7 +326,7 @@ struct target_state {};
 
 struct Machine : public boost::msm::front::state_machine_def<Machine>
 {
-    void action(const event&) {}
+    void action(const event&);
 
     struct transition_table : boost::mpl::vector<
         a_row<start_state, event, target_state, &Machine::action
@@ -351,7 +351,7 @@ struct target_state {};
 
 struct Machine : public boost::msm::front::state_machine_def<Machine>
 {
-    void action(const event&) {}
+    void action(const event&);
 
     struct transition_table : boost::mpl::vector<
         a_row<start_state, event, target_state, &Machine::action>
@@ -365,6 +365,86 @@ r"@startuml
 hide empty description
 [*] --> start_state
 start_state --> target_state : on event\ndo &Machine::action
+@enduml
+";
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+        .stdout(expectedOutput);
+}
+
+#[test]
+fn shouldFail_whenGuardRowHasTargetStateAndCommaButNoGuard()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+struct target_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        g_row<start_state, event, target_state,>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected guard, got: TemplateEnd.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowHasGuardAndDoesNotEndWithTemplateEndSymbol()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+struct target_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    bool guard(const event&);
+
+    struct transition_table : boost::mpl::vector<
+        g_row<start_state, event, target_state, &Machine::guard
+    {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected template end symbol, got: BlockStart.\"\n");
+}
+
+#[test]
+fn shouldPass_whenTransitionTableHasRowWithStartStateAndEventAndTargetStateAndGuard()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+struct target_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    bool guard(const event&);
+
+    struct transition_table : boost::mpl::vector<
+        g_row<start_state, event, target_state, &Machine::guard>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    let expectedOutput =
+r"@startuml
+hide empty description
+[*] --> start_state
+start_state --> target_state : on event\nif &Machine::guard
 @enduml
 ";
     assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()

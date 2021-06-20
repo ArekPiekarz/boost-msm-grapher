@@ -72,6 +72,7 @@ impl Parser
             State::ExpectAction => self.parseTokenInExpectAction(token),
             State::AfterAction => self.parseTokenInAfterAction(token),
             State::ExpectGuard => self.parseTokenInExpectGuard(token),
+            State::ExpectRowEnd => self.parseTokenInExpectRowEnd(token),
             State::AfterRowEnd => self.parseTokenInAfterRowEnd(token)
         }
     }
@@ -202,9 +203,27 @@ impl Parser
         }
     }
 
-    fn parseTokenInExpectGuard(&mut self, _token: &Token) -> Result<Flow,String>
+    fn parseTokenInExpectGuard(&mut self, token: &Token) -> Result<Flow,String>
     {
-        Ok(Flow::Continue)
+        match token {
+            Token::Identifier(name) => {
+                self.getLastRow().guard = name.clone();
+                self.state = State::ExpectRowEnd;
+                Ok(Flow::Continue)
+            },
+            _ => Err(format!("Expected guard, got: {:?}.", token))
+        }
+    }
+
+    fn parseTokenInExpectRowEnd(&mut self, token: &Token) -> Result<Flow,String>
+    {
+        match token {
+            Token::TemplateEnd => {
+                self.state = State::AfterRowEnd;
+                Ok(Flow::Continue)
+            },
+            _ => Err(format!("Expected template end symbol, got: {:?}.", token))
+        }
     }
 
     fn parseTokenInAfterRowEnd(&mut self, token: &Token) -> Result<Flow,String>
@@ -243,5 +262,6 @@ enum State
     ExpectAction,
     AfterAction,
     ExpectGuard,
+    ExpectRowEnd,
     AfterRowEnd
 }
