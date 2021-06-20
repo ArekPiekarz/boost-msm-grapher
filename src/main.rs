@@ -94,6 +94,13 @@ fn makeTransitionText(row: &Row) -> Option<String>
         text.push_str(&format!("on {}", row.event));
     }
 
+    if !row.action.is_empty() {
+        if text != TRANSITION_PREFIX {
+            text.push_str("\\n");
+        }
+        text.push_str(&format!("do {}", row.action));
+    }
+
     match text.as_str() {
         TRANSITION_PREFIX => None,
         _ => Some(text)

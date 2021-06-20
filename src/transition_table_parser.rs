@@ -1,5 +1,5 @@
 use crate::flow::Flow;
-use crate::row::Row;
+use crate::row::{Row, RowKind};
 use crate::token::Token;
 
 use regex::Regex;
@@ -31,7 +31,7 @@ impl Parser
             Some(index) => index,
             None => return Err("Rows were not found in the transition table.".into())
         };
-        self.rows.push(Row::new());
+
         for token in &tokens[firstRowIndex..] {
             match self.parseToken(token) {
                 Ok(flow) =>
@@ -69,7 +69,9 @@ impl Parser
             State::ExpectCommaAfterEvent => self.parseTokenInExpectCommaAfterEvent(token),
             State::ExpectTargetState => self.parseTokenInExpectTargetState(token),
             State::AfterTargetState =>  self.parseTokenInAfterTargetState(token),
-            State::ExpectAction => Ok(Flow::Continue),
+            State::ExpectAction => self.parseTokenInExpectAction(token),
+            State::AfterAction => self.parseTokenInAfterAction(token),
+            State::ExpectGuard => self.parseTokenInExpectGuard(token),
             State::AfterRowEnd => self.parseTokenInAfterRowEnd(token)
         }
     }
@@ -79,6 +81,7 @@ impl Parser
         match token {
             Token::Identifier(name) => {
                 if self.rowRegex.is_match(name) {
+                    self.rows.push(Row::new(selectRowKind(name)));
                     self.state = State::ExpectRowTemplateStart;
                     Ok(Flow::Continue)
                 } else {
@@ -162,7 +165,10 @@ impl Parser
     {
         match token {
             Token::Comma => {
-                self.state = State::ExpectAction;
+                match self.getLastRow().kind {
+                    RowKind::WithGuard => self.state = State::ExpectGuard,
+                    RowKind::Other => self.state = State::ExpectAction
+                }
                 Ok(Flow::Continue)
             },
             Token::TemplateEnd => {
@@ -173,12 +179,38 @@ impl Parser
         }
     }
 
-    fn parseTokenInAfterRowEnd(&mut self, token: &Token) -> Result<Flow,String>
+    fn parseTokenInExpectAction(&mut self, token: &Token) -> Result<Flow,String>
+    {
+        match token {
+            Token::Identifier(name) => {
+                self.getLastRow().action = name.clone();
+                self.state = State::AfterAction;
+                Ok(Flow::Continue)
+            },
+            _ => Err(format!("Expected action, got: {:?}.", token))
+        }
+    }
+
+    fn parseTokenInAfterAction(&mut self, token: &Token) -> Result<Flow,String>
     {
         match token {
             Token::TemplateEnd => {
-                Ok(Flow::Break)
+                self.state = State::AfterRowEnd;
+                Ok(Flow::Continue)
             },
+            _ => Err(format!("Expected comma or template end symbol after action, got: {:?}.", token))
+        }
+    }
+
+    fn parseTokenInExpectGuard(&mut self, _token: &Token) -> Result<Flow,String>
+    {
+        Ok(Flow::Continue)
+    }
+
+    fn parseTokenInAfterRowEnd(&mut self, token: &Token) -> Result<Flow,String>
+    {
+        match token {
+            Token::TemplateEnd => Ok(Flow::Break),
             _ => Err(format!("Expected comma or template end symbol after row, got: {:?}.", token))
         }
     }
@@ -186,6 +218,14 @@ impl Parser
     fn getLastRow(&mut self) -> &mut Row
     {
         self.rows.last_mut().expect("Parser::rows should have contained elements after first row was found")
+    }
+}
+
+fn selectRowKind(name: &str) -> RowKind
+{
+    match name {
+        "g_row" => RowKind::WithGuard,
+        _ => RowKind::Other
     }
 }
 
@@ -201,5 +241,7 @@ enum State
     ExpectTargetState,
     AfterTargetState,
     ExpectAction,
+    AfterAction,
+    ExpectGuard,
     AfterRowEnd
 }

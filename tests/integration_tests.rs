@@ -216,7 +216,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 }
 
 #[test]
-fn shouldFail_whenRowDoesNotEndWithCommaOrTemplateEndSymbol()
+fn shouldFail_whenRowHasTargetStateAndDoesNotEndWithCommaOrTemplateEndSymbol()
 {
     let transitionTable =
 "#include <boost/msm/front/state_machine_def.hpp>
@@ -285,6 +285,86 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 hide empty description
 [*] --> start_state
 start_state --> target_state : on event
+@enduml
+";
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+        .stdout(expectedOutput);
+}
+
+#[test]
+fn shouldFail_whenActionRowHasTargetStateAndCommaButNoAction()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+struct target_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    struct transition_table : boost::mpl::vector<
+        a_row<start_state, event, target_state,>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected action, got: TemplateEnd.\"\n");
+}
+
+#[test]
+fn shouldFail_whenRowHasActionAndDoesNotEndWithCommaOrTemplateEndSymbol()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+struct target_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    void action(const event&) {}
+
+    struct transition_table : boost::mpl::vector<
+        a_row<start_state, event, target_state, &Machine::action
+    {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+        .stderr("Error: \"Expected comma or template end symbol after action, got: BlockStart.\"\n");
+}
+
+#[test]
+fn shouldPass_whenTransitionTableHasRowWithStartStateAndEventAndTargetStateAndAction()
+{
+    let transitionTable =
+"#include <boost/msm/front/state_machine_def.hpp>
+
+struct start_state {};
+struct event {};
+struct target_state {};
+
+struct Machine : public boost::msm::front::state_machine_def<Machine>
+{
+    void action(const event&) {}
+
+    struct transition_table : boost::mpl::vector<
+        a_row<start_state, event, target_state, &Machine::action>
+    > {};
+};";
+    let mut file = tempfile::NamedTempFile::new().unwrap();
+    file.write_all(transitionTable.as_bytes()).unwrap();
+
+    let expectedOutput =
+r"@startuml
+hide empty description
+[*] --> start_state
+start_state --> target_state : on event\ndo &Machine::action
 @enduml
 ";
     assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
