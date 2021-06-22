@@ -22,7 +22,7 @@ impl Parser
 {
     fn new() -> Self
     {
-        Self{state: State::Initial, rowRegex: Regex::new(".*[rR]ow$").unwrap(), rows: vec![]}
+        Self{state: State::ExpectRowIdentifier, rowRegex: Regex::new(".*[rR]ow$").unwrap(), rows: vec![]}
     }
 
     fn parse(mut self, tokens: &[Token]) -> Result<Vec<Row>,String>
@@ -61,7 +61,7 @@ impl Parser
     fn parseToken(&mut self, token: &Token) -> Result<Flow,String>
     {
         match self.state {
-            State::Initial => self.parseTokenInInitialState(token),
+            State::ExpectRowIdentifier => self.parseTokenInExpectRowIdentifier(token),
             State::ExpectRowTemplateStart => self.parseTokenInExpectRowTemplateStart(token),
             State::ExpectStartState => self.parseTokenInExpectStartState(token),
             State::ExpectCommaAfterStartState => self.parseTokenInExpectCommaAfterStartState(token),
@@ -77,7 +77,7 @@ impl Parser
         }
     }
 
-    fn parseTokenInInitialState(&mut self, token: &Token) -> Result<Flow,String>
+    fn parseTokenInExpectRowIdentifier(&mut self, token: &Token) -> Result<Flow,String>
     {
         match token {
             Token::Identifier(name) => {
@@ -86,10 +86,10 @@ impl Parser
                     self.state = State::ExpectRowTemplateStart;
                     Ok(Flow::Continue)
                 } else {
-                    Err(format!("Expected row identifier, got: {}", name))
+                    Err(format!("Expected row identifier, got: {}.", name))
                 }
             },
-            x => Err(format!("Expected identifier, got: {:?}", x))
+            x => Err(format!("Expected row identifier, got: {:?}.", x))
         }
     }
 
@@ -233,6 +233,10 @@ impl Parser
     fn parseTokenInAfterRowEnd(&mut self, token: &Token) -> Result<Flow,String>
     {
         match token {
+            Token::Comma => {
+                self.state = State::ExpectRowIdentifier;
+                Ok(Flow::Continue)
+            },
             Token::TemplateEnd => Ok(Flow::Break),
             _ => Err(format!("Expected comma or template end symbol after row, got: {:?}.", token))
         }
@@ -255,7 +259,7 @@ fn selectRowKind(name: &str) -> RowKind
 #[allow(clippy::enum_variant_names)]
 enum State
 {
-    Initial,
+    ExpectRowIdentifier,
     ExpectRowTemplateStart,
     ExpectStartState,
     ExpectCommaAfterStartState,
