@@ -1,0 +1,3 @@
+boost-msm-grapher
+
+Graph generator for C++ state machines which are written with boost::msm.

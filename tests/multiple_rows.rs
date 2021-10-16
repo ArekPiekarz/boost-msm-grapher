@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
 
+mod common;
+use common::APP_NAME;
+
 use std::io::Write;
 
 #[test]
@@ -21,7 +24,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected row identifier, got: TemplateEnd.\"\n");
 }
 
@@ -54,7 +57,7 @@ state1 --> state2 : on event1
 state2 --> state1 : on event2
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }
 
@@ -99,6 +102,6 @@ state2 --> state4 : on event2\nif &Machine::guard1
 state3 --> state1 : on event3\nif &Machine::guard2\ndo &Machine::action2
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }

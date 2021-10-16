@@ -1,5 +1,5 @@
 [package]
-name = "msm_graph"
+name = "boost-msm-grapher"
 version = "0.1.0"
 authors = ["Arkadiusz Piekarz <piekarzarkadiusz@gmail.com>"]
 edition = "2018"

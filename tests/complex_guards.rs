@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
 
+mod common;
+use common::APP_NAME;
+
 use std::io::Write;
 
 
@@ -24,7 +27,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"While parsing a guard, tokens ended prematurely.\"\n");
 }
 
@@ -51,7 +54,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected an identifier or a template end, got: BlockStart.\"\n");
 }
 
@@ -85,7 +88,7 @@ hide empty description
 State1 --> State2 : on Event\nif Not<>
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }
 
@@ -118,7 +121,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a comma, template start or template end, got: BlockStart.\"\n");
 }
 
@@ -151,7 +154,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a template end, got: BlockStart.\"\n");
 }
 
@@ -191,7 +194,7 @@ hide empty description
 State1 --> State2 : on Event\nif Not<Guard>
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }
 
@@ -224,7 +227,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected an identifier or a template end, got: BlockStart.\"\n");
 }
 
@@ -257,7 +260,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a comma or a template end, got: BlockStart.\"\n");
 }
 
@@ -290,7 +293,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a template end, got: BlockStart.\"\n");
 }
 
@@ -323,7 +326,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a comma or a template end after row, got: BlockStart.\"\n");
 }
 
@@ -363,7 +366,7 @@ hide empty description
 State1 --> State2 : on Event\nif Not<Guard<>>
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }
 
@@ -396,7 +399,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected an identifier, got: TemplateEnd.\"\n");
 }
 
@@ -442,6 +445,6 @@ hide empty description
 State1 --> State2 : on Event\nif And<Guard1, Guard2>
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }

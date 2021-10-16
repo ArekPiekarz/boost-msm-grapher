@@ -1,26 +1,29 @@
 #![allow(non_snake_case)]
 
+mod common;
+use common::APP_NAME;
+
 use std::io::Write;
 
 
 #[test]
 fn shouldFail_whenNoFilePathIsProvided()
 {
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().assert().failure()
         .stderr("Error: \"Please provide a path to a file to analyze.\"\n");
 }
 
 #[test]
 fn shouldFail_whenTooManyArgumentsAreProvided()
 {
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().args(&["file1", "file2"]).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().args(&["file1", "file2"]).assert().failure()
         .stderr("Error: \"Too many arguments passed to program, expected only one with a file path, got 2\"\n");
 }
 
 #[test]
 fn shouldFail_whenFileCannotBeRead()
 {
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg("wrong_file").assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg("wrong_file").assert().failure()
         .stderr("Error: \"Failed to read file: \\\"wrong_file\\\", error: No such file or directory (os error 2)\"\n");
 }
 
@@ -28,7 +31,7 @@ fn shouldFail_whenFileCannotBeRead()
 fn shouldFail_whenFileDoesNotHaveTransitionTable()
 {
     let file = tempfile::NamedTempFile::new().unwrap();
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Transition table was not found.\"\n");
 }
 
@@ -45,7 +48,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Rows were not found in the transition table.\"\n");
 }
 
@@ -66,7 +69,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Rows were not found in the transition table.\"\n");
 }
 
@@ -87,7 +90,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected row template start, got: TemplateEnd.\"\n");
 }
 
@@ -106,7 +109,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected start state, got: TemplateEnd.\"\n");
 }
 
@@ -125,7 +128,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected start state, got: Comma.\"\n");
 }
 
@@ -146,7 +149,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected comma after start state, got: TemplateEnd.\"\n");
 }
 
@@ -167,7 +170,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected event, got: TemplateEnd.\"\n");
 }
 
@@ -189,7 +192,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected comma after event, got: TemplateEnd.\"\n");
 }
 
@@ -211,7 +214,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected target state, got: TemplateEnd.\"\n");
 }
 
@@ -234,7 +237,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected comma or template end symbol after target state, got: BlockStart.\"\n");
 }
 
@@ -257,7 +260,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a comma or a template end after row, got: BlockStart.\"\n");
 }
 
@@ -287,7 +290,7 @@ hide empty description
 start_state --> target_state : on event
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }
 
@@ -310,7 +313,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected action, got: TemplateEnd.\"\n");
 }
 
@@ -335,7 +338,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected comma or template end symbol after action, got: BlockStart.\"\n");
 }
 
@@ -367,7 +370,7 @@ hide empty description
 start_state --> target_state : on event\ndo &Machine::action
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }
 
@@ -390,7 +393,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a guard, got: TemplateEnd.\"\n");
 }
 
@@ -415,7 +418,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a template end, got: BlockStart.\"\n");
 }
 
@@ -447,7 +450,7 @@ hide empty description
 start_state --> target_state : on event\nif &Machine::guard
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }
 
@@ -472,7 +475,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a guard, got: TemplateEnd.\"\n");
 }
 
@@ -498,7 +501,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a template end, got: BlockStart.\"\n");
 }
 
@@ -531,6 +534,6 @@ hide empty description
 start_state --> target_state : on event\nif &Machine::guard\ndo &Machine::action
 @enduml
 ";
-    assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().success()
+    assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
         .stdout(expectedOutput);
 }
