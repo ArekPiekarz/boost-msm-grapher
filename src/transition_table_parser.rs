@@ -1,8 +1,10 @@
-use crate::flow::Flow;
 use crate::row::{Row, RowKind};
+use crate::row_section_parser::RowSectionParser;
 use crate::token::Token;
 
 use regex::Regex;
+use std::iter::Peekable;
+use std::slice::Iter;
 
 
 pub(crate) fn parseTransitionTable(tokens: &[Token]) -> Result<Vec<Row>,String>
@@ -32,11 +34,13 @@ impl Parser
             None => return Err("Rows were not found in the transition table.".into())
         };
 
-        for token in &tokens[firstRowIndex..] {
-            match self.parseToken(token) {
+        let mut iterator = tokens[firstRowIndex..].iter().peekable();
+        while let Some(token) = iterator.peek() {
+            match self.parseToken(token, &mut iterator) {
                 Ok(flow) =>
                     match flow {
-                        Flow::Continue => (),
+                        Flow::Continue => { iterator.next(); },
+                        Flow::ContinueWithoutConsuming => (),
                         Flow::Break => break
                     },
                 Err(e) => return Err(e)
@@ -58,7 +62,7 @@ impl Parser
         None
     }
 
-    fn parseToken(&mut self, token: &Token) -> Result<Flow,String>
+    fn parseToken(&mut self, token: &Token, iterator: &mut Peekable<Iter<Token>>) -> Result<Flow,String>
     {
         match self.state {
             State::ExpectRowIdentifier => self.parseTokenInExpectRowIdentifier(token),
@@ -71,7 +75,7 @@ impl Parser
             State::AfterTargetState =>  self.parseTokenInAfterTargetState(token),
             State::ExpectAction => self.parseTokenInExpectAction(token),
             State::AfterAction => self.parseTokenInAfterAction(token),
-            State::ExpectGuard => self.parseTokenInExpectGuard(token),
+            State::ExpectGuard => self.parseTokenInExpectGuard(iterator),
             State::ExpectRowEnd => self.parseTokenInExpectRowEnd(token),
             State::AfterRowEnd => self.parseTokenInAfterRowEnd(token)
         }
@@ -207,15 +211,16 @@ impl Parser
         }
     }
 
-    fn parseTokenInExpectGuard(&mut self, token: &Token) -> Result<Flow,String>
+    fn parseTokenInExpectGuard(&mut self, iterator: &mut Peekable<Iter<Token>>) -> Result<Flow,String>
     {
-        match token {
-            Token::Identifier(name) => {
-                self.getLastRow().guard = name.clone();
+        let rowSectionParser = RowSectionParser::new("a guard");
+        match rowSectionParser.parse(iterator) {
+            Ok(name) => {
+                self.getLastRow().guard = name;
                 self.state = State::ExpectRowEnd;
-                Ok(Flow::Continue)
+                Ok(Flow::ContinueWithoutConsuming)
             },
-            _ => Err(format!("Expected guard, got: {:?}.", token))
+            Err(e) => Err(e)
         }
     }
 
@@ -226,7 +231,7 @@ impl Parser
                 self.state = State::AfterRowEnd;
                 Ok(Flow::Continue)
             },
-            _ => Err(format!("Expected template end symbol, got: {:?}.", token))
+            _ => Err(format!("Expected a template end, got: {:?}.", token))
         }
     }
 
@@ -238,7 +243,7 @@ impl Parser
                 Ok(Flow::Continue)
             },
             Token::TemplateEnd => Ok(Flow::Break),
-            _ => Err(format!("Expected comma or template end symbol after row, got: {:?}.", token))
+            _ => Err(format!("Expected a comma or a template end after row, got: {:?}.", token))
         }
     }
 
@@ -272,4 +277,11 @@ enum State
     ExpectGuard,
     ExpectRowEnd,
     AfterRowEnd
+}
+
+enum Flow
+{
+    Continue,
+    ContinueWithoutConsuming,
+    Break
 }

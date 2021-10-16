@@ -239,7 +239,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 }
 
 #[test]
-fn shouldFail_whenTransitionTableDoesNotEndWithTemplateEndSymbol()
+fn shouldFail_whenTransitionTableDoesNotEndWithTemplateEnd()
 {
     let transitionTable =
 "#include <boost/msm/front/state_machine_def.hpp>
@@ -258,7 +258,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     file.write_all(transitionTable.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
-        .stderr("Error: \"Expected comma or template end symbol after row, got: BlockStart.\"\n");
+        .stderr("Error: \"Expected a comma or a template end after row, got: BlockStart.\"\n");
 }
 
 #[test]
@@ -391,7 +391,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     file.write_all(transitionTable.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
-        .stderr("Error: \"Expected guard, got: TemplateEnd.\"\n");
+        .stderr("Error: \"Expected a guard, got: TemplateEnd.\"\n");
 }
 
 #[test]
@@ -416,7 +416,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     file.write_all(transitionTable.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
-        .stderr("Error: \"Expected template end symbol, got: BlockStart.\"\n");
+        .stderr("Error: \"Expected a template end, got: BlockStart.\"\n");
 }
 
 #[test]
@@ -473,7 +473,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     file.write_all(transitionTable.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
-        .stderr("Error: \"Expected guard, got: TemplateEnd.\"\n");
+        .stderr("Error: \"Expected a guard, got: TemplateEnd.\"\n");
 }
 
 #[test]
@@ -499,7 +499,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     file.write_all(transitionTable.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin("msm_graph").unwrap().arg(file.path()).assert().failure()
-        .stderr("Error: \"Expected template end symbol, got: BlockStart.\"\n");
+        .stderr("Error: \"Expected a template end, got: BlockStart.\"\n");
 }
 
 #[test]

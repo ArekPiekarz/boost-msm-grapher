@@ -3,6 +3,7 @@
 mod character_reader;
 mod flow;
 mod row;
+mod row_section_parser;
 mod token;
 mod transition_table_lexer;
 mod transition_table_parser;
@@ -75,7 +76,7 @@ fn findStartOfTransitionTable(text: &str) -> Option<usize>
             }
         };
         let textSlice = &text[startIndex..endIndex];
-        if transitionTableRegex.is_match(&textSlice) {
+        if transitionTableRegex.is_match(textSlice) {
             return Some(startIndex);
         }
         startIndex = endIndex + 1;
