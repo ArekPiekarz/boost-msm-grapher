@@ -8,5 +8,5 @@ edition = "2018"
 regex = "1.5.4"
 
 [dev-dependencies]
-assert_cmd = { version = "1.0.7", default-features = false }
+assert_cmd = { version = "2.0.2", default-features = false }
 tempfile = { version = "3.2.0", default-features = false }
