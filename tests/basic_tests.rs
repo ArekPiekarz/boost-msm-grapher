@@ -314,11 +314,11 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     file.write_all(transitionTable.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
-        .stderr("Error: \"Expected action, got: TemplateEnd.\"\n");
+        .stderr("Error: \"Expected an action, got: TemplateEnd.\"\n");
 }
 
 #[test]
-fn shouldFail_whenRowHasActionAndDoesNotEndWithCommaOrTemplateEndSymbol()
+fn shouldFail_whenRowHasActionAndDoesNotEndWithCommaOrTemplateEnd()
 {
     let transitionTable =
 "#include <boost/msm/front/state_machine_def.hpp>
@@ -339,7 +339,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     file.write_all(transitionTable.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
-        .stderr("Error: \"Expected comma or template end symbol after action, got: BlockStart.\"\n");
+        .stderr("Error: \"Expected a comma or a template end after action, got: BlockStart.\"\n");
 }
 
 #[test]

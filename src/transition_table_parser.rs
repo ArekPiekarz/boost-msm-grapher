@@ -73,7 +73,7 @@ impl Parser
             State::ExpectCommaAfterEvent => self.parseTokenInExpectCommaAfterEvent(token),
             State::ExpectTargetState => self.parseTokenInExpectTargetState(token),
             State::AfterTargetState =>  self.parseTokenInAfterTargetState(token),
-            State::ExpectAction => self.parseTokenInExpectAction(token),
+            State::ExpectAction => self.parseTokenInExpectAction(iterator),
             State::AfterAction => self.parseTokenInAfterAction(token),
             State::ExpectGuard => self.parseTokenInExpectGuard(iterator),
             State::ExpectRowEnd => self.parseTokenInExpectRowEnd(token),
@@ -184,15 +184,16 @@ impl Parser
         }
     }
 
-    fn parseTokenInExpectAction(&mut self, token: &Token) -> Result<Flow,String>
+    fn parseTokenInExpectAction(&mut self, iterator: &mut Peekable<Iter<Token>>) -> Result<Flow,String>
     {
-        match token {
-            Token::Identifier(name) => {
-                self.getLastRow().action = name.clone();
+        let rowSectionParser = RowSectionParser::new("an action");
+        match rowSectionParser.parse(iterator) {
+            Ok(name) => {
+                self.getLastRow().action = name;
                 self.state = State::AfterAction;
-                Ok(Flow::Continue)
+                Ok(Flow::ContinueWithoutConsuming)
             },
-            _ => Err(format!("Expected action, got: {:?}.", token))
+            Err(e) => Err(e)
         }
     }
 
@@ -207,7 +208,7 @@ impl Parser
                 self.state = State::AfterRowEnd;
                 Ok(Flow::Continue)
             },
-            _ => Err(format!("Expected comma or template end symbol after action, got: {:?}.", token))
+            _ => Err(format!("Expected a comma or a template end after action, got: {:?}.", token))
         }
     }
 
