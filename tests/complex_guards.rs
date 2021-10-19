@@ -94,7 +94,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 r"@startuml
 hide empty description
 [*] --> State1
-State1 --> State2 : on Event\nif Not<>\ndo None
+State1 --> State2 : on Event\nif Not<>
 @enduml
 ";
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
@@ -209,7 +209,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 r"@startuml
 hide empty description
 [*] --> State1
-State1 --> State2 : on Event\nif Not<Guard>\ndo None
+State1 --> State2 : on Event\nif Not<Guard>
 @enduml
 ";
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
@@ -401,7 +401,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 r"@startuml
 hide empty description
 [*] --> State1
-State1 --> State2 : on Event\nif Not<Guard<>>\ndo None
+State1 --> State2 : on Event\nif Not<Guard<>>
 @enduml
 ";
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
@@ -486,7 +486,7 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 r"@startuml
 hide empty description
 [*] --> State1
-State1 --> State2 : on Event\nif And<Guard1, Guard2>\ndo None
+State1 --> State2 : on Event\nif And<Guard1, Guard2>
 @enduml
 ";
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()

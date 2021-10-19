@@ -91,16 +91,16 @@ const TRANSITION_PREFIX: &str = " : ";
 fn makeTransitionText(row: &Row) -> Option<String>
 {
     let mut text = String::from(TRANSITION_PREFIX);
-    if !row.event.is_empty() {
+    if shouldBeShown(&row.event) {
         text.push_str(&format!("on {}", row.event));
     }
 
-    if !row.guard.is_empty() {
+    if shouldBeShown(&row.guard) {
         addNewLineIfNeeded(&mut text);
         text.push_str(&format!("if {}", row.guard));
     }
 
-    if !row.action.is_empty() {
+    if shouldBeShown(&row.action) {
         addNewLineIfNeeded(&mut text);
         text.push_str(&format!("do {}", row.action));
     }
@@ -109,6 +109,11 @@ fn makeTransitionText(row: &Row) -> Option<String>
         TRANSITION_PREFIX => None,
         _ => Some(text)
     }
+}
+
+fn shouldBeShown(name: &str) -> bool
+{
+    !matches!(name, "" | "None" | "none" | "front::none" | "msm::front::none" | "boost::msm::front::none")
 }
 
 fn addNewLineIfNeeded(text: &mut String)
