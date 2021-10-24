@@ -38,15 +38,33 @@ fn shouldFail_whenFileDoesNotHaveTransitionTable()
 #[test]
 fn shouldFail_whenTransitionTableHasNoRows()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
+
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<> {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Rows were not found in the transition table.\"\n");
@@ -55,19 +73,36 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenFirstRowIdentifierDoesNotEndWithRow()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 struct not_a_row_identifier {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
         not_a_row_identifier
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Rows were not found in the transition table.\"\n");
@@ -76,19 +111,35 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowDoesNotHaveTemplateStartSymbol()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct Row {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
-        Row
+        _row
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected row template start, got: TemplateEnd.\"\n");
@@ -97,17 +148,35 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowIsEmpty()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
+
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
         _row<>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected start state, got: TemplateEnd.\"\n");
@@ -116,17 +185,35 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowDoesNotStartWithIdentifier()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
+
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
         _row<,>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected start state, got: Comma.\"\n");
@@ -135,19 +222,35 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowHasOnlyStartState()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
-        _row<start_state>
+        _row<StartState>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected comma after start state, got: TemplateEnd.\"\n");
@@ -156,19 +259,35 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowDoesNotHaveEvent()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
-        _row<start_state,>
+        _row<StartState,>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected event, got: TemplateEnd.\"\n");
@@ -177,20 +296,35 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowDoesNotHaveCommaAfterEvent()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
-struct event {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
-        _row<start_state, event>
+        _row<StartState, Event>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected comma after event, got: TemplateEnd.\"\n");
@@ -199,20 +333,35 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowDoesNotHaveTargetState()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
-struct event {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
-        _row<start_state, event,>
+        _row<StartState, Event,>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected target state, got: TemplateEnd.\"\n");
@@ -221,21 +370,35 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowHasTargetStateAndDoesNotEndWithCommaOrTemplateEndSymbol()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
-        _row<start_state, event, target_state
+        _row<StartState, Event, TargetState
     {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected comma or template end symbol after target state, got: BlockStart.\"\n");
@@ -244,21 +407,35 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenTransitionTableDoesNotEndWithTemplateEnd()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
-        _row<start_state, event, target_state>
+        _row<StartState, Event, TargetState>
     {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a comma or a template end after row, got: BlockStart.\"\n");
@@ -267,27 +444,41 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldPass_whenTransitionTableHasRowWithStartStateAndEventAndTargetState()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = StartState;
+
     struct transition_table : boost::mpl::vector<
-        _row<start_state, event, target_state>
+        _row<StartState, Event, TargetState>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     let expectedOutput =
 "@startuml
 hide empty description
-[*] --> start_state
-start_state --> target_state : on event
+[*] --> StartState
+StartState --> TargetState : on Event
 @enduml
 ";
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
@@ -297,21 +488,42 @@ start_state --> target_state : on event
 #[test]
 fn shouldFail_whenActionRowHasTargetStateAndCommaButNoAction()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
+#include <iostream>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    void action(const Event&)
+    {
+        std::cout << "performing action\n";
+    }
+
+    using initial_state = StartState;
+    using M = MachineDef;
+
     struct transition_table : boost::mpl::vector<
-        a_row<start_state, event, target_state,>
+        a_row<StartState, Event, TargetState,>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected an action, got: TemplateEnd.\"\n");
@@ -320,23 +532,42 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowHasActionAndDoesNotEndWithCommaOrTemplateEnd()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
+#include <iostream>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
-    void action(const event&);
+    void action(const Event&)
+    {
+        std::cout << "performing action\n";
+    }
+
+    using initial_state = StartState;
+    using M = MachineDef;
 
     struct transition_table : boost::mpl::vector<
-        a_row<start_state, event, target_state, &Machine::action
+        a_row<StartState, Event, TargetState, &M::action
     {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a comma or a template end after action, got: BlockStart.\"\n");
@@ -345,29 +576,48 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldPass_whenTransitionTableHasRowWithStartStateAndEventAndTargetStateAndAction()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
+#include <iostream>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
-    void action(const event&);
+    void action(const Event&)
+    {
+        std::cout << "performing action\n";
+    }
+
+    using initial_state = StartState;
+    using M = MachineDef;
 
     struct transition_table : boost::mpl::vector<
-        a_row<start_state, event, target_state, &Machine::action>
+        a_row<StartState, Event, TargetState, &M::action>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     let expectedOutput =
 r"@startuml
 hide empty description
-[*] --> start_state
-start_state --> target_state : on event\ndo &Machine::action
+[*] --> StartState
+StartState --> TargetState : on Event\ndo &M::action
 @enduml
 ";
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
@@ -377,21 +627,41 @@ start_state --> target_state : on event\ndo &Machine::action
 #[test]
 fn shouldFail_whenGuardRowHasTargetStateAndCommaButNoGuard()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    bool guard(const Event&)
+    {
+        return true;
+    }
+
+    using initial_state = StartState;
+    using M = MachineDef;
+
     struct transition_table : boost::mpl::vector<
-        g_row<start_state, event, target_state,>
+        g_row<StartState, Event, TargetState,>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a guard, got: TemplateEnd.\"\n");
@@ -400,23 +670,41 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowHasGuardAndDoesNotEndWithTemplateEndSymbol()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
-    bool guard(const event&);
+    bool guard(const Event&)
+    {
+        return true;
+    }
+
+    using initial_state = StartState;
+    using M = MachineDef;
 
     struct transition_table : boost::mpl::vector<
-        g_row<start_state, event, target_state, &Machine::guard
+        g_row<StartState, Event, TargetState, &M::guard
     {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a template end, got: BlockStart.\"\n");
@@ -425,29 +713,47 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldPass_whenTransitionTableHasRowWithStartStateAndEventAndTargetStateAndGuard()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
-    bool guard(const event&);
+    bool guard(const Event&)
+    {
+        return true;
+    }
+
+    using initial_state = StartState;
+    using M = MachineDef;
 
     struct transition_table : boost::mpl::vector<
-        g_row<start_state, event, target_state, &Machine::guard>
+        g_row<StartState, Event, TargetState, &M::guard>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     let expectedOutput =
 r"@startuml
 hide empty description
-[*] --> start_state
-start_state --> target_state : on event\nif &Machine::guard
+[*] --> StartState
+StartState --> TargetState : on Event\nif &M::guard
 @enduml
 ";
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
@@ -457,23 +763,47 @@ start_state --> target_state : on event\nif &Machine::guard
 #[test]
 fn shouldFail_whenRowHasActionAndCommaButNoGuard()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
+#include <iostream>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
-    void action(const event&);
+    void action(const Event&)
+    {
+        std::cout << "performing action\n";
+    }
+
+    bool guard(const Event&)
+    {
+        return true;
+    }
+
+    using initial_state = StartState;
+    using M = MachineDef;
 
     struct transition_table : boost::mpl::vector<
-        row<start_state, event, target_state, &Machine::action,>
+        row<StartState, Event, TargetState, &M::action,>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a guard, got: TemplateEnd.\"\n");
@@ -482,24 +812,47 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowHasActionAndGuardButDoesNotEndWithTemplateEndSymbol()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
+#include <iostream>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
-    void action(const event&);
-    bool guard(const event&);
+    void action(const Event&)
+    {
+        std::cout << "performing action\n";
+    }
+
+    bool guard(const Event&)
+    {
+        return true;
+    }
+
+    using initial_state = StartState;
+    using M = MachineDef;
 
     struct transition_table : boost::mpl::vector<
-        row<start_state, event, target_state, &Machine::action, &Machine::guard
+        row<StartState, Event, TargetState, &M::action, &M::guard
     {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().failure()
         .stderr("Error: \"Expected a template end, got: BlockStart.\"\n");
@@ -508,30 +861,53 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldPass_whenTransitionTableHasRowWithStartStateAndEventAndTargetStateAndActionAndGuard()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let cppFileContent = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
+#include <iostream>
 
-struct start_state {};
-struct event {};
-struct target_state {};
+struct StartState : public boost::msm::front::state<> {};
+struct TargetState : public boost::msm::front::state<> {};
+struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
-    void action(const event&);
-    bool guard(const event&);
+    void action(const Event&)
+    {
+        std::cout << "performing action\n";
+    }
+
+    bool guard(const Event&)
+    {
+        return true;
+    }
+
+    using initial_state = StartState;
+    using M = MachineDef;
 
     struct transition_table : boost::mpl::vector<
-        row<start_state, event, target_state, &Machine::action, &Machine::guard>
+        row<StartState, Event, TargetState, &M::action, &M::guard>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
-    file.write_all(transitionTable.as_bytes()).unwrap();
+    file.write_all(cppFileContent.as_bytes()).unwrap();
 
     let expectedOutput =
 r"@startuml
 hide empty description
-[*] --> start_state
-start_state --> target_state : on event\nif &Machine::guard\ndo &Machine::action
+[*] --> StartState
+StartState --> TargetState : on Event\nif &M::guard\ndo &M::action
 @enduml
 ";
     assert_cmd::Command::cargo_bin(APP_NAME).unwrap().arg(file.path()).assert().success()
