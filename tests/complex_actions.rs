@@ -9,16 +9,18 @@ use std::io::Write;
 #[test]
 fn shouldFail_whenRowHasActionSequenceWithTemplateStart_butFileEnds()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = "
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -37,16 +39,18 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowHasActionSequenceWithTemplateStart_butNoTemplateEnd()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = "
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -56,7 +60,18 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     struct transition_table : boost::mpl::vector<
         Row<State1, Event, State2, ActionSequence<
     {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+";
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
@@ -65,18 +80,20 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 }
 
 #[test]
-fn shouldPass_whenRowHasActionSequenceWithDefaultTemplateType()
+fn shouldPass_whenRowHasActionSequenceWithNoActions()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = "
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -86,7 +103,18 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     struct transition_table : boost::mpl::vector<
         Row<State1, Event, State2, ActionSequence<>>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+";
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
@@ -104,22 +132,28 @@ State1 --> State2 : on Event\ndo ActionSequence<>
 #[test]
 fn shouldFail_whenRowHasActionSequenceWithOneAction_butNoTemplateEnd()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
+#include <iostream>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
 struct Action
 {
     template <class Event, class Fsm, class Source, class Target>
-    void operator()(const Event&, Fsm&, Source&, Target&);
+    void operator()(const Event&, Fsm&, Source&, Target&)
+    {
+        std::cout << "performing Action\n";
+    }
 };
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -129,7 +163,18 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     struct transition_table : boost::mpl::vector<
         Row<State1, Event, State2, ActionSequence<Action
     {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
@@ -140,22 +185,28 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldFail_whenRowHasActionSequenceWithOneAction_butNoTemplateEndForRow()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
+#include <iostream>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
 struct Action
 {
     template <class Event, class Fsm, class Source, class Target>
-    void operator()(const Event&, Fsm&, Source&, Target&);
+    void operator()(const Event&, Fsm&, Source&, Target&)
+    {
+        std::cout << "performing Action\n";
+    }
 };
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -165,7 +216,18 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     struct transition_table : boost::mpl::vector<
         Row<State1, Event, State2, ActionSequence<Action>
     {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
@@ -176,22 +238,28 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldPass_whenRowHasActionSequenceWithOneAction()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
+#include <iostream>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
 struct Action
 {
     template <class Event, class Fsm, class Source, class Target>
-    void operator()(const Event&, Fsm&, Source&, Target&);
+    void operator()(const Event&, Fsm&, Source&, Target&)
+    {
+        std::cout << "performing Action\n";
+    }
 };
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -201,7 +269,18 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     struct transition_table : boost::mpl::vector<
         Row<State1, Event, State2, ActionSequence<Action>>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
@@ -219,23 +298,29 @@ State1 --> State2 : on Event\ndo ActionSequence<Action>
 #[test]
 fn shouldFail_whenRowHasActionSequenceWithOneActionWithTemplateStart_butNoTemplateEnd()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
+#include <iostream>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
 template <class Type = int>
 struct Action
 {
     template <class Event, class Fsm, class Source, class Target>
-    void operator()(const Event&, Fsm&, Source&, Target&);
+    void operator()(const Event&, Fsm&, Source&, Target&)
+    {
+        std::cout << "performing Action\n";
+    }
 };
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -245,7 +330,18 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     struct transition_table : boost::mpl::vector<
         Row<State1, Event, State2, ActionSequence<Action<
     {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
@@ -256,23 +352,29 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldPass_whenRowHasActionSequenceWithOneActionWithDefaultTemplateType()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
+#include <iostream>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
 template <class Type = int>
 struct Action
 {
     template <class Event, class Fsm, class Source, class Target>
-    void operator()(const Event&, Fsm&, Source&, Target&);
+    void operator()(const Event&, Fsm&, Source&, Target&)
+    {
+        std::cout << "performing Action\n";
+    }
 };
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -282,7 +384,18 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     struct transition_table : boost::mpl::vector<
         Row<State1, Event, State2, ActionSequence<Action<>>>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
@@ -300,22 +413,37 @@ State1 --> State2 : on Event\ndo ActionSequence<Action<>>
 #[test]
 fn shouldFail_whenRowHasActionSequenceWithOneActionAndComma_butNoSecondAction()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
+#include <iostream>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
-struct Action
+struct Action1
 {
     template <class Event, class Fsm, class Source, class Target>
-    void operator()(const Event&, Fsm&, Source&, Target&);
+    void operator()(const Event&, Fsm&, Source&, Target&)
+    {
+        std::cout << "performing Action1\n";
+    }
 };
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct Action2
 {
+    template <class Event, class Fsm, class Source, class Target>
+    void operator()(const Event&, Fsm&, Source&, Target&)
+    {
+        std::cout << "performing Action2\n";
+    }
+};
+
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
+{
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -323,9 +451,20 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     using Row = boost::msm::front::Row<Source, Event, Target, Action, Guard>;
 
     struct transition_table : boost::mpl::vector<
-        Row<State1, Event, State2, ActionSequence<Action,>>
+        Row<State1, Event, State2, ActionSequence<Action1,>>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
@@ -336,28 +475,37 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
 #[test]
 fn shouldPass_whenRowHasActionSequenceWithTwoActions()
 {
-    let transitionTable =
-"#include <boost/msm/front/state_machine_def.hpp>
+    let transitionTable = r#"
+#include <boost/msm/back/state_machine.hpp>
+#include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
+#include <iostream>
 
-struct State1 {};
-struct State2 {};
+struct State1 : public boost::msm::front::state<> {};
+struct State2 : public boost::msm::front::state<> {};
 struct Event {};
 
 struct Action1
 {
     template <class Event, class Fsm, class Source, class Target>
-    void operator()(const Event&, Fsm&, Source&, Target&);
+    void operator()(const Event&, Fsm&, Source&, Target&)
+    {
+        std::cout << "performing Action1\n";
+    }
 };
 
 struct Action2
 {
     template <class Event, class Fsm, class Source, class Target>
-    void operator()(const Event&, Fsm&, Source&, Target&);
+    void operator()(const Event&, Fsm&, Source&, Target&)
+    {
+        std::cout << "performing Action2\n";
+    }
 };
 
-struct Machine : public boost::msm::front::state_machine_def<Machine>
+struct MachineDef : public boost::msm::front::state_machine_def<MachineDef>
 {
+    using initial_state = State1;
     template <typename ...Actions>
     using ActionSequence = boost::msm::front::ActionSequence_<boost::mpl::vector<Actions...>>;
     using None = boost::msm::front::none;
@@ -367,7 +515,18 @@ struct Machine : public boost::msm::front::state_machine_def<Machine>
     struct transition_table : boost::mpl::vector<
         Row<State1, Event, State2, ActionSequence<Action1, Action2>>
     > {};
-};";
+};
+
+using Machine = boost::msm::back::state_machine<MachineDef>;
+
+int main()
+{
+    Machine machine;
+    machine.start();
+    machine.process_event(Event{});
+    return 0;
+}
+"#;
     let mut file = tempfile::NamedTempFile::new().unwrap();
     file.write_all(transitionTable.as_bytes()).unwrap();
 
