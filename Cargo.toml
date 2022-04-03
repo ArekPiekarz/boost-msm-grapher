@@ -5,7 +5,7 @@ authors = ["Arkadiusz Piekarz <piekarzarkadiusz@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-regex = "1.5.4"
+regex = "1.5.5"
 
 [dev-dependencies]
 assert_cmd = { version = "2.0.4", default-features = false }
